@@ -1,9 +1,12 @@
 from dotenv import dotenv_values
 import requests
 
+# get environment variables
+env_vars = dotenv_values('.env')
+
 # get api key
 headers = {
-    "X-TBA-Auth-Key": dotenv_values('X-TBA-Auth-Key')
+    "X-TBA-Auth-Key": env_vars['X-TBA-Auth-Key']
 }
 
 class Team:
@@ -18,7 +21,7 @@ class Team:
         response = requests.request("GET", self.url, headers=headers)
         self.games = response.json()
         
-    def winPercentage(self):
+    def getWinPercentage(self):
         # (re)set variables
         self.wins = 0
         self.loses = 0
@@ -42,7 +45,7 @@ class Team:
             if our_alliance == game['winning_alliance']:
                 # print("We won.")
                 self.wins += 1
-            elif game['alliances']['blue']['score'] == game['alliance']['red']['score']:
+            elif game['alliances']['blue']['score'] == game['alliances']['red']['score']:
                 # print("We tied.")
                 # ties are inferred
                 pass
@@ -50,7 +53,7 @@ class Team:
                 # print ("We lost")
                 self.loses += 1
         # get total games
-        total = len(game)
+        total = len(self.games)
 
         # get ties
         self.ties = total - (self.wins + self.loses)
@@ -194,6 +197,3 @@ example game
     "winning_alliance": "red"
 }
 """
-
-        
-
