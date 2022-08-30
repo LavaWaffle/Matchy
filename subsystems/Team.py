@@ -21,6 +21,15 @@ class Team:
         response = requests.request("GET", self.url, headers=headers)
         self.games = response.json()
         
+    def getAlliance(self, blue_teams: list[str]):
+        if self.team in blue_teams:
+            # we are blue
+            our_alliance = "blue"
+        else:
+            # we are red
+            our_alliance = "red"
+        return our_alliance
+
     def getWinPercentage(self):
         # (re)set variables
         self.wins = 0
@@ -29,17 +38,8 @@ class Team:
 
         # loop over games
         for game in self.games:
-            # get blue teams
             blue_teams = game['alliances']['blue']['team_keys']
-            # red_teams = game['alliances']['red']['team_keys']
-            
-            # find our alliance
-            if self.team in blue_teams:
-                # we are blue
-                our_alliance = "blue"
-            else:
-                # we are red
-                our_alliance = "red"
+            our_alliance = self.getAlliance(blue_teams)
             
             # check if we won
             if our_alliance == game['winning_alliance']:
@@ -68,6 +68,26 @@ class Team:
             'tiePercent': self.tiePercent,
             'losePercent': self.losePercent
         }
+    
+    def getAverageScore(self):
+        # (re)set variables
+        self.total_points = 0
+        for game in self.games:
+            # get alliance
+            blue_teams = game['alliances']['blue']['team_keys']
+            our_alliance = self.getAlliance(blue_teams)
+
+            # find current team points and increment total points
+            if our_alliance == "blue":
+                blue_total_points = game['score_breakdown']['blue']['totalPoints']
+                self.total_points += blue_total_points
+            else:
+                red_total_points = game['score_breakdown']['red']['totalPoints']
+                self.total_points += red_total_points
+            
+        self.average_score = self.total_points/len(self.games)
+        return self.average_score
+    
 """
 example game
 {

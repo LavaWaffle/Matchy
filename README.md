@@ -1,4 +1,4 @@
-# Waffle-Bot
+# Matchy
 
 To-do list: 
 - make commands for average climb data, average auto data, etc. 
