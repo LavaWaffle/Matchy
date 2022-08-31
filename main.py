@@ -25,7 +25,7 @@ async def ping(ctx: lightbulb.Context):
 @lightbulb.command("average_score", "Gets a team's average score over the season")
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def average_score(ctx: lightbulb.Context):
-    team_number = ctx.options.team # hi ty im just doing stuff to hide the api key rn lol
+    team_number = ctx.options.team 
     team = Team('frc' + str(team_number), '2022')
     avg_score = team.getAverageScore()
     await ctx.respond(f"Team **{team_number}**'s average score is: {avg_score}")
@@ -37,5 +37,17 @@ async def average_score(ctx: lightbulb.Context):
 async def source_code(ctx: lightbulb.Context):
     github = "https://github.com/LavaWaffle/Waffle-Bot"
     await ctx.respond(f"Github: {github}")
+
+@bot.command()
+@lightbulb.option('message', 'The message', str)
+@lightbulb.command('everyone', 'owo')
+@lightbulb.implements(lightbulb.SlashCommand)
+async def everyone(ctx: lightbulb.Context):
+    print(str(ctx.user.id))
+    if (ctx.user.id == 425618103062364160):
+        message = ctx.options.message 
+        await ctx.respond(f"@everyone : {message}", mentions_everyone=True)
+    else:
+        await ctx.respond(f"{ctx.author.mention}, you are not authorized to use this command")
 
 bot.run()
