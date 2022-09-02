@@ -30,16 +30,15 @@ async def average_score(ctx: lightbulb.Context):
     team = Team('frc' + str(team_number), '2022')
     
     if team.error:
-        team.error_msg
-        # an error occured while getting the team's data
+        # an error occurred while getting the team's data
         embed = hikari.Embed(
             title = "Error", 
-            description = f"Team **{team_number}** does not exist.",
+            description = f"An error occurred while getting data from **{team_number}**. \n ```{team.error_msg}```",
             color = "#FF5555"
         )
         await ctx.respond(embed)
     else:
-        # no error occured
+        # no error occurred
         average_score = team.getAverageScore()
         embed = hikari.Embed(
             title = f"Team **{team_number}**'s average score was **{round(average_score, 2)}**", 
