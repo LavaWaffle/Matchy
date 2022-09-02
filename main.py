@@ -8,6 +8,7 @@ from subsystems.Team import Team
 
 # discord bot stuff goes here
 import lightbulb
+import hikari
 
 bot = lightbulb.BotApp(
   token=env_vars['DISCORD-BOT-TOKEN'], 
@@ -27,15 +28,32 @@ async def ping(ctx: lightbulb.Context):
 async def average_score(ctx: lightbulb.Context):
     team_number = ctx.options.team 
     team = Team('frc' + str(team_number), '2022')
-    avg_score = team.getAverageScore()
-    await ctx.respond(f"Team **{team_number}**'s average score is: {avg_score}")
+    
+    if team.error:
+        team.error_msg
+        # an error occured while getting the team's data
+        embed = hikari.Embed(
+            title = "Error", 
+            description = f"Team **{team_number}** does not exist.",
+            color = "#FF5555"
+        )
+        await ctx.respond(embed)
+    else:
+        # no error occured
+        average_score = team.getAverageScore()
+        embed = hikari.Embed(
+            title = f"Team **{team_number}**'s average score was **{round(average_score, 2)}**", 
+            description = "The average of all their matches from the most recent season.",
+            color="#77FF77"
+        )
+        await ctx.respond(embed)
 
 # get github
 @bot.command()
-@lightbulb.command('source_code', "Gets github source code link")
+@lightbulb.command('source_code', "Gets GitHub source code link")
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def source_code(ctx: lightbulb.Context):
-    github = "https://github.com/LavaWaffle/Waffle-Bot"
+    github = "https://github.com/LavaWaffle/Matchy"
     await ctx.respond(f"Github: {github}")
 
 @bot.command()

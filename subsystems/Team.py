@@ -19,7 +19,15 @@ class Team:
 
     def fetch(self):
         response = requests.request("GET", self.url, headers=headers)
-        self.games = response.json()
+        # if the response has an error in it, return the error
+        if "Error" in response.json():
+            self.error = True
+            self.error_msg = response.json()["Error"]
+            self.games = []
+        else:
+            self.error = False
+            self.error_msg = None
+            self.games = response.json()
         
     def getAlliance(self, blue_teams: list[str]):
         if self.team in blue_teams:
