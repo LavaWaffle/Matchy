@@ -1,5 +1,8 @@
 # virtual environment
 env
 
+# vscode settings
+.vscode
+
 # api key stuff
 .env
