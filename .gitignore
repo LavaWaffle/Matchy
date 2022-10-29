@@ -6,3 +6,6 @@ env
 
 # api key stuff
 .env
+
+# python bytecode
+**/__pycache__/
