@@ -1,11 +1,15 @@
 # virtual environment
-env
+**/env/
+**/venv/
 
 # vscode settings
-.vscode
+**/.vscode/
+
+# pycharm settings
+**/.idea/
 
 # api key stuff
-.env
+*.env
 
 # python bytecode
 **/__pycache__/

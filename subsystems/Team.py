@@ -9,6 +9,7 @@ headers = {
     "X-TBA-Auth-Key": env_vars['X-TBA-Auth-Key']
 }
 
+
 class Team:
     def __init__(self, team: str, year: str):
         self.team = team
@@ -28,7 +29,7 @@ class Team:
             self.error = False
             self.error_msg = None
             self.games = response.json()
-        
+
     def getAlliance(self, blue_teams: list[str]):
         if self.team in blue_teams:
             # we are blue
@@ -38,7 +39,7 @@ class Team:
             our_alliance = "red"
         return our_alliance
 
-    def getWinPercentage(self):
+    def getPercentages(self):
         # (re)set variables
         self.wins = 0
         self.loses = 0
@@ -48,7 +49,7 @@ class Team:
         for game in self.games:
             blue_teams = game['alliances']['blue']['team_keys']
             our_alliance = self.getAlliance(blue_teams)
-            
+
             # check if we won
             if our_alliance == game['winning_alliance']:
                 # print("We won.")
@@ -68,15 +69,15 @@ class Team:
 
         # get percents
         # desired / total
-        self.winPercent = self.wins/total
-        self.tiePercent = self.ties/total
-        self.losePercent = self.loses/total
+        self.winPercent = self.wins / total
+        self.tiePercent = self.ties / total
+        self.losePercent = self.loses / total
         return {
             'winPercent': self.winPercent,
             'tiePercent': self.tiePercent,
             'losePercent': self.losePercent
         }
-    
+
     def getAverageScore(self):
         # (re)set variables
         self.total_points = 0
@@ -92,10 +93,10 @@ class Team:
             else:
                 red_total_points = game['score_breakdown']['red']['totalPoints']
                 self.total_points += red_total_points
-            
-        self.average_score = self.total_points/len(self.games)
+
+        self.average_score = self.total_points / len(self.games)
         return self.average_score
-    
+
 """
 example game
 {
