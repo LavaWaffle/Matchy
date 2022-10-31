@@ -29,16 +29,10 @@ class Team:
         else:
             self.games = data
 
-    def getAlliance(self, blue_teams: list[str]):
-        if self.team in blue_teams:
-            # we are blue
-            our_alliance = "blue"
-        else:
-            # we are red
-            our_alliance = "red"
-        return our_alliance
+    def get_alliance(self, blue_teams: list[str]):
+        return "blue" if self.team in blue_teams else "red"
 
-    def getPercentages(self):
+    def get_percentages(self):
         # (re)set variables
         wins = 0
         loses = 0
@@ -46,7 +40,7 @@ class Team:
         # loop over games
         for game in self.games:
             blue_teams = game['alliances']['blue']['team_keys']
-            our_alliance = self.getAlliance(blue_teams)
+            our_alliance = self.get_alliance(blue_teams)
 
             # check if we won
             if our_alliance == game['winning_alliance']:
@@ -67,24 +61,24 @@ class Team:
 
         return Percentages(wins, loses, ties)
 
-    def getAverageScore(self):
+    def get_average_score(self):
         # (re)set variables
-        self.total_points = 0
+        total_points = 0
         for game in self.games:
             # get alliance
             blue_teams = game['alliances']['blue']['team_keys']
-            our_alliance = self.getAlliance(blue_teams)
+            our_alliance = self.get_alliance(blue_teams)
 
             # find current team points and increment total points
             if our_alliance == "blue":
                 blue_total_points = game['score_breakdown']['blue']['totalPoints']
-                self.total_points += blue_total_points
+                total_points += blue_total_points
             else:
                 red_total_points = game['score_breakdown']['red']['totalPoints']
-                self.total_points += red_total_points
+                total_points += red_total_points
 
-        self.average_score = self.total_points/len(self.games)
-        return self.average_score
+        average_score = total_points/len(self.games)
+        return average_score
 
 """
 example game

@@ -39,7 +39,7 @@ async def average_score(ctx: lightbulb.Context):
         await ctx.respond(embed)
     else:
         # no error occurred
-        avg_score = team.getAverageScore()
+        avg_score = team.get_average_score()
         embed = hikari.Embed(
             title=f"Team **{team_number}**'s average score was **{round(avg_score, 2)}**",
             description="The average of all their matches from the most recent season.",
@@ -68,7 +68,7 @@ async def percentages(ctx: lightbulb.Context):
         await ctx.respond(embed)
     else:
         # no error occurred
-        percent = team.getPercentages()
+        percent = team.get_percentages()
 
         embed = (
             hikari.Embed(
