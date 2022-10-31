@@ -7,3 +7,4 @@ To-do list:
 
 ## Features 
 - Get Average Score of an frc team
+- Get Win/Lose/Tie percentages of an frc team
