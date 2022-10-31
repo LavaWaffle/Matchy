@@ -1,4 +1,5 @@
 from dotenv import dotenv_values
+from subsystems.Percentages import Percentages
 import requests
 
 # get environment variables
@@ -8,6 +9,7 @@ env_vars = dotenv_values('.env')
 headers = {
     "X-TBA-Auth-Key": env_vars['X-TBA-Auth-Key']
 }
+
 
 class Team:
     def __init__(self, team: str, year: str):
@@ -28,7 +30,7 @@ class Team:
             self.error = False
             self.error_msg = None
             self.games = response.json()
-        
+
     def getAlliance(self, blue_teams: list[str]):
         if self.team in blue_teams:
             # we are blue
@@ -38,45 +40,35 @@ class Team:
             our_alliance = "red"
         return our_alliance
 
-    def getWinPercentage(self):
+    def getPercentages(self):
         # (re)set variables
-        self.wins = 0
-        self.loses = 0
-        self.ties = 0
+        wins = 0
+        loses = 0
 
         # loop over games
         for game in self.games:
             blue_teams = game['alliances']['blue']['team_keys']
             our_alliance = self.getAlliance(blue_teams)
-            
+
             # check if we won
             if our_alliance == game['winning_alliance']:
                 # print("We won.")
-                self.wins += 1
+                wins += 1
             elif game['alliances']['blue']['score'] == game['alliances']['red']['score']:
                 # print("We tied.")
                 # ties are inferred
                 pass
             else:
                 # print ("We lost")
-                self.loses += 1
+                loses += 1
         # get total games
         total = len(self.games)
 
         # get ties
-        self.ties = total - (self.wins + self.loses)
+        ties = total - (wins + loses)
 
-        # get percents
-        # desired / total
-        self.winPercent = self.wins/total
-        self.tiePercent = self.ties/total
-        self.losePercent = self.loses/total
-        return {
-            'winPercent': self.winPercent,
-            'tiePercent': self.tiePercent,
-            'losePercent': self.losePercent
-        }
-    
+        return Percentages(wins, loses, ties)
+
     def getAverageScore(self):
         # (re)set variables
         self.total_points = 0
@@ -92,10 +84,10 @@ class Team:
             else:
                 red_total_points = game['score_breakdown']['red']['totalPoints']
                 self.total_points += red_total_points
-            
+
         self.average_score = self.total_points/len(self.games)
         return self.average_score
-    
+
 """
 example game
 {
