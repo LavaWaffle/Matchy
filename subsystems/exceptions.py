@@ -1,0 +1,1 @@
+class TeamFetchException(Exception): pass

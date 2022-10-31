@@ -1,5 +1,6 @@
 from dotenv import dotenv_values
 from subsystems.Team import Team
+from subsystems.exceptions import *
 import lightbulb
 import hikari
 
@@ -11,7 +12,6 @@ bot = lightbulb.BotApp(
     token=env_vars['DISCORD-BOT-TOKEN'],
     prefix="."
 )
-
 
 @bot.command()
 @lightbulb.command("ping", "Prints pong")
@@ -26,13 +26,14 @@ async def ping(ctx: lightbulb.Context):
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def average_score(ctx: lightbulb.Context):
     team_number = ctx.options.team
-    team = Team('frc' + str(team_number), '2022')
-
-    if team.error:
+    try:
+        team = Team('frc' + str(team_number), '2022')
+    except TeamFetchException as e:
         # an error occurred while getting the team's data
+        error_msg = e.args[0]
         embed = hikari.Embed(
             title="Error",
-            description=f"An error occurred while getting data from **{team_number}**. \n ```{team.error_msg}```",
+            description=f"An error occurred while getting data from **{team_number}**. \n ```{error_msg}```",
             color="#FF5555"
         )
         await ctx.respond(embed)
@@ -54,13 +55,14 @@ async def average_score(ctx: lightbulb.Context):
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def percentages(ctx: lightbulb.Context):
     team_number = ctx.options.team
-    team = Team('frc' + str(team_number), '2022')
-
-    if team.error:
+    try:
+        team = Team('frc' + str(team_number), '2022')
+    except TeamFetchException as e:
         # an error occurred while getting the team's data
+        error_msg = e.args[0]
         embed = hikari.Embed(
             title="Error",
-            description=f"An error occurred while getting data from **{team_number}**. \n ```{team.error_msg}```",
+            description=f"An error occurred while getting data from **{team_number}**. \n ```{error_msg}```",
             color="#FF5555"
         )
         await ctx.respond(embed)

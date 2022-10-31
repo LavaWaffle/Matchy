@@ -1,5 +1,6 @@
 from dotenv import dotenv_values
 from subsystems.Percentages import Percentages
+from subsystems.exceptions import *
 import requests
 
 # get environment variables
@@ -10,26 +11,23 @@ headers = {
     "X-TBA-Auth-Key": env_vars['X-TBA-Auth-Key']
 }
 
-
 class Team:
     def __init__(self, team: str, year: str):
         self.team = team
         self.year = year
         self.team_number = team[3:]
         self.url = f"https://www.thebluealliance.com/api/v3/team/{team}/matches/{year}"
+        self.games = []
         self.fetch()
 
     def fetch(self):
         response = requests.request("GET", self.url, headers=headers)
+        data = response.json()
         # if the response has an error in it, return the error
-        if "Error" in response.json():
-            self.error = True
-            self.error_msg = response.json()["Error"]
-            self.games = []
+        if isinstance(data, dict) and "Error" in data.keys():
+            raise TeamFetchException(data["Error"])
         else:
-            self.error = False
-            self.error_msg = None
-            self.games = response.json()
+            self.games = data
 
     def getAlliance(self, blue_teams: list[str]):
         if self.team in blue_teams:
