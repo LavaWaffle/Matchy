@@ -1,5 +1,7 @@
 from dotenv import dotenv_values
-from subsystems.Team import Team
+
+from subsystems.TeamTotalData import TeamTotalData
+from subsystems.TeamYearData import TeamYearData
 from subsystems.exceptions import *
 import lightbulb
 import hikari
@@ -13,9 +15,11 @@ bot = lightbulb.BotApp(
     prefix="."
 )
 
+sp_command = lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
+
 @bot.command()
 @lightbulb.command("ping", "Prints pong")
-@lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
+@sp_command
 async def ping(ctx: lightbulb.Context):
     await ctx.respond("pong")
 
@@ -23,11 +27,11 @@ async def ping(ctx: lightbulb.Context):
 @bot.command()
 @lightbulb.option('team', 'The team you want', int)
 @lightbulb.command("average_score", "Gets a team's average score over the season")
-@lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
+@sp_command
 async def average_score(ctx: lightbulb.Context):
     team_number = ctx.options.team
     try:
-        team = Team('frc' + str(team_number), '2022')
+        team = TeamYearData(str(team_number), '2022')
     except TeamFetchException as e:
         # an error occurred while getting the team's data
         error_msg = e.args[0]
@@ -39,7 +43,7 @@ async def average_score(ctx: lightbulb.Context):
         await ctx.respond(embed)
     else:
         # no error occurred
-        avg_score = team.get_average_score()
+        avg_score = team.average_score()
         embed = hikari.Embed(
             title=f"Team **{team_number}**'s average score was **{round(avg_score, 2)}**",
             description="The average of all their matches from the most recent season.",
@@ -47,16 +51,40 @@ async def average_score(ctx: lightbulb.Context):
         )
         await ctx.respond(embed)
 
+@bot.command()
+@lightbulb.option("team", "The team you want", int)
+@lightbulb.command("awards", "Gets a list of a team's awards")
+@sp_command
+async def awards(ctx: lightbulb.Context):
+    team_number = ctx.options.team
+    try:
+        team = TeamTotalData(str(team_number))
+    except TeamFetchException as e:
+        error_msg = e.args[0]
+        embed = hikari.Embed(
+            title = "Error",
+            description = f"An error occurred while getting data from **{team_number}**. \n ```{error_msg}```",
+            color = "#FF5555"
+        )
+        await ctx.respond(embed)
+    else:
+        output = "\n".join(f"{award.year}: {award.name}" for award in team.awards)
+        embed = hikari.Embed(
+            title = f"Awards for Team **{team_number}**",
+            description = output,
+            color = "#77FF77"
+        ).add_field("Award count", f"{len(team.awards)}", inline = True)
+        await ctx.respond(embed)
 
 @bot.command()
 @lightbulb.option('team', 'The team you want', int)
 @lightbulb.command("percentages", "Gets a team's win, lose, and tie percentages over the season",
                    aliases=["win_percentage", "lose_percentage", "tie_percentage"])
-@lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
+@sp_command
 async def percentages(ctx: lightbulb.Context):
     team_number = ctx.options.team
     try:
-        team = Team('frc' + str(team_number), '2022')
+        team = TeamYearData(str(team_number), '2022')
     except TeamFetchException as e:
         # an error occurred while getting the team's data
         error_msg = e.args[0]
@@ -68,7 +96,7 @@ async def percentages(ctx: lightbulb.Context):
         await ctx.respond(embed)
     else:
         # no error occurred
-        percent = team.get_percentages()
+        percent = team.percentages()
 
         embed = (
             hikari.Embed(
@@ -86,7 +114,7 @@ async def percentages(ctx: lightbulb.Context):
 # get github
 @bot.command()
 @lightbulb.command('source_code', "Gets GitHub source code link")
-@lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
+@sp_command
 async def source_code(ctx: lightbulb.Context):
     github = "https://github.com/LavaWaffle/Matchy"
     await ctx.respond(f"Github: {github}")

@@ -1,52 +1,36 @@
-from dotenv import dotenv_values
+from subsystems.utils import *
 from subsystems.Percentages import Percentages
-from subsystems.exceptions import *
-import requests
+from subsystems.Match import Match
 
-# get environment variables
-env_vars = dotenv_values('.env')
-
-# get api key
-headers = {
-    "X-TBA-Auth-Key": env_vars['X-TBA-Auth-Key']
-}
-
-class Team:
+class TeamYearData:
     def __init__(self, team: str, year: str):
-        self.team = team
+        self.team = f"frc{team}"
         self.year = year
-        self.team_number = team[3:]
-        self.url = f"https://www.thebluealliance.com/api/v3/team/{team}/matches/{year}"
-        self.games = []
+        self.games: list[Match] = []
         self.fetch()
 
     def fetch(self):
-        response = requests.request("GET", self.url, headers=headers)
-        data = response.json()
-        # if the response has an error in it, return the error
-        if isinstance(data, dict) and "Error" in data.keys():
-            raise TeamFetchException(data["Error"])
-        else:
-            self.games = data
+        data = get_data(f"https://www.thebluealliance.com/api/v3/team/{self.team}/matches/{self.year}")
+        self.games = [Match(match_data) for match_data in data]
 
-    def get_alliance(self, blue_teams: list[str]):
-        return "blue" if self.team in blue_teams else "red"
+    def get_alliance(self, game: Match):
+        return "blue" if self.team in game.teams_of("blue") else "red"
 
-    def get_percentages(self):
+    @property
+    def percentages(self):
         # (re)set variables
         wins = 0
         loses = 0
 
         # loop over games
         for game in self.games:
-            blue_teams = game['alliances']['blue']['team_keys']
-            our_alliance = self.get_alliance(blue_teams)
+            our_alliance = self.get_alliance(game)
 
             # check if we won
-            if our_alliance == game['winning_alliance']:
+            if our_alliance == game.winning_alliance:
                 # print("We won.")
                 wins += 1
-            elif game['alliances']['blue']['score'] == game['alliances']['red']['score']:
+            elif game.score_of("blue") == game.score_of("red"):
                 # print("We tied.")
                 # ties are inferred
                 pass
@@ -61,23 +45,18 @@ class Team:
 
         return Percentages(wins, loses, ties)
 
-    def get_average_score(self):
+    @property
+    def average_score(self):
         # (re)set variables
         total_points = 0
         for game in self.games:
             # get alliance
-            blue_teams = game['alliances']['blue']['team_keys']
-            our_alliance = self.get_alliance(blue_teams)
+            our_alliance = self.get_alliance(game)
 
             # find current team points and increment total points
-            if our_alliance == "blue":
-                blue_total_points = game['score_breakdown']['blue']['totalPoints']
-                total_points += blue_total_points
-            else:
-                red_total_points = game['score_breakdown']['red']['totalPoints']
-                total_points += red_total_points
+            total_points += game.total_score_of(our_alliance)
 
-        average_score = total_points/len(self.games)
+        average_score = total_points / len(self.games)
         return average_score
 
 """
