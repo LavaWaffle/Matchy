@@ -1,0 +1,1 @@
+STATE_PATH = "BOT_STATE.json"
