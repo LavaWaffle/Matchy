@@ -21,67 +21,24 @@ async def ping(ctx: lightbulb.Context):
 
 
 @bot.command()
-@lightbulb.option('team', 'The team you want', int)
-@lightbulb.command("average_score", "Gets a team's average score over the season")
+@lightbulb.option("team_number", "The team number", int)
+@lightbulb.command("team", "Gets team information")
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
-async def average_score(ctx: lightbulb.Context):
-    team_number = ctx.options.team
-    team = Team('frc' + str(team_number), '2022')
-
-    if team.error:
-        # an error occurred while getting the team's data
-        embed = hikari.Embed(
-            title="Error",
-            description=f"An error occurred while getting data from **{team_number}**. \n ```{team.error_msg}```",
-            color="#FF5555"
-        )
-        await ctx.respond(embed)
-    else:
-        # no error occurred
-        avg_score = team.getAverageScore()
-        embed = hikari.Embed(
-            title=f"Team **{team_number}**'s average score was **{round(avg_score, 2)}**",
-            description="The average of all their matches from the most recent season.",
-            color="#77FF77"
-        )
-        await ctx.respond(embed)
-
-
-@bot.command()
-@lightbulb.option('team', 'The team you want', int)
-@lightbulb.command("percentages", "Gets a team's win, lose, and tie percentages over the season", aliases=["win_percentage", "lose_percentage", "tie_percentage"])
-@lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
-async def percentages(ctx: lightbulb.Context):
-    team_number = ctx.options.team
-    team = Team('frc' + str(team_number), '2022')
-
-    if team.error:
-        # an error occurred while getting the team's data
-        embed = hikari.Embed(
-            title="Error",
-            description=f"An error occurred while getting data from **{team_number}**. \n ```{team.error_msg}```",
-            color="#FF5555"
-        )
-        await ctx.respond(embed)
-    else:
-        # no error occurred
-        percent = team.getPercentages()
-        winPercent = f"{round(percent['winPercent'], 4) * 100}%"
-        losePercent = f"{round(percent['losePercent'], 4) * 100}%"
-        tiePercent = f"{round(percent['tiePercent'], 4) * 100}%"
-
-        embed = (
-            hikari.Embed(
-                title=f"From all of Team **{team_number}**'s matches from the most recent season:",
-                description="",
-                color="#77FF77"
-            )
-            .add_field("Win percentage", winPercent, inline=True)
-            .add_field("Lose percentage", losePercent, inline=True)
-            .add_field("Tie percentage", tiePercent, inline=True)
-        )
-        await ctx.respond(embed)
-
+async def team(ctx: lightbulb.Context) -> None:
+    team_data = Team(ctx.options.team_number)
+    if team_data.data is None:
+        await ctx.respond(hikari.Embed(title = "Error",
+                                       description = f"There is no team numbered {ctx.options.team_number}!",
+                                       color = hikari.Color.from_hex_code("#ff0000")))
+        return
+    await ctx.respond(hikari.Embed(title = f"Team {team_data.team_number} {team_data.name}", description = f"""
+This team {'**IS**' if team_data.is_off_season else 'is **NOT**'} off season.
+This team is in {(team_data.state + ' in ') if team_data.state is not None else ''}{team_data.country}.
+This team had their rookie year in {team_data.rookie_year}.
+Wins: {team_data.full_wins} / Losses: {team_data.full_losses} / Ties: {team_data.full_ties}
+Win rate: {team_data.full_win_rate * 100}% wins out of {team_data.full_match_count} games
+EPA: {team_data.norm_epa} (average is 1500)
+""".strip(), color = hikari.Color.from_hex_code("#00ff00")))
 
 # get github
 @bot.command()

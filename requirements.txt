@@ -13,5 +13,6 @@ idna==3.3
 multidict==6.0.2
 python-dotenv==0.20.0
 requests==2.28.1
+statbotics==2.0.1
 urllib3==1.26.12
 yarl==1.8.1
