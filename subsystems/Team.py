@@ -1,6 +1,7 @@
-import statbotics
+import statbotics, requests
 from typing import Dict, Any, Optional
 from copy import deepcopy
+from bs4 import BeautifulSoup
 
 sb = statbotics.Statbotics()
 
@@ -8,8 +9,14 @@ sb = statbotics.Statbotics()
 class Team:
     def __init__(self, team_number: int) -> None:
         self.__team_number = team_number
-        try: self.__data = sb.get_team(self.team_number)
-        except UserWarning: self.__data = None
+        try:
+            self.__data: Optional[Dict[str, Any]] = sb.get_team(self.team_number)
+            r = requests.get(f"https://www.thebluealliance.com/team/{self.team_number}")
+            if r.status_code == 200:
+                self.__soup: Optional[BeautifulSoup] = BeautifulSoup(r.content, features = "html.parser")
+            else:
+                self.__soup: Optional[BeautifulSoup] = None
+        except UserWarning: self.__data: Optional[Dict[str, Any]] = None
 
     @property
     def team_number(self) -> int:
@@ -18,6 +25,10 @@ class Team:
     @property
     def data(self) -> Optional[Dict[str, Any]]:
         return deepcopy(self.__data)
+
+    @property
+    def soup(self) -> Optional[BeautifulSoup]:
+        return self.__soup
 
     @property
     def name(self) -> str:
@@ -38,6 +49,21 @@ class Team:
     @property
     def district(self) -> str:
         return self.data["district"]
+
+    @property
+    def district_name(self) -> str:
+        district = self.district
+        if district == "chs": return "FIRST Chesapeake District"
+        if district == "fim": return "FIRST In Michigan District"
+        if district == "fit": return "FIRST In Texas District"
+        if district == "fin": return "FIRST Indiana Robotics District"
+        if district == "isr": return "FIRST Israel District"
+        if district == "fma": return "FIRST Mid-Atlantic District"
+        if district == "fnc": return "FIRST North Carolina District"
+        if district == "ne":  return "New England District"
+        if district == "ont": return "Ontario District"
+        if district == "pnw": return "Pacific Northwest District"
+        if district == "pch": return "Peachtree District"
 
     @property
     def rookie_year(self) -> int:
@@ -102,3 +128,10 @@ class Team:
     @property
     def full_win_rate(self) -> float:
         return self.data["full_winrate"]
+
+    @property
+    def icon_url(self) -> Optional[str]:
+        if not self.soup: return None
+        element = self.soup.find("img", {"class": "team-avatar"})
+        if element is None: return None
+        return element.get("src")

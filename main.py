@@ -27,18 +27,31 @@ async def ping(ctx: lightbulb.Context):
 async def team(ctx: lightbulb.Context) -> None:
     team_data = Team(ctx.options.team_number)
     if team_data.data is None:
-        await ctx.respond(hikari.Embed(title = "Error",
-                                       description = f"There is no team numbered {ctx.options.team_number}!",
-                                       color = hikari.Color.from_hex_code("#ff0000")))
+        await ctx.respond(
+            hikari.Embed(
+                title = "Error",
+                description = f"There is no team numbered {ctx.options.team_number}!",
+                color = hikari.Color.from_hex_code("#ff0000")
+            )
+        )
         return
-    await ctx.respond(hikari.Embed(title = f"Team {team_data.team_number} {team_data.name}", description = f"""
+    description = f"""
 This team {'**IS**' if team_data.is_off_season else 'is **NOT**'} off season.
 This team is in {(team_data.state + ' in ') if team_data.state is not None else ''}{team_data.country}.
+Member of {team_data.district_name}
 This team had their rookie year in {team_data.rookie_year}.
 Wins: {team_data.full_wins} / Losses: {team_data.full_losses} / Ties: {team_data.full_ties}
 Win rate: {team_data.full_win_rate * 100}% wins out of {team_data.full_match_count} games
 EPA: {team_data.norm_epa} (average is 1500)
-""".strip(), color = hikari.Color.from_hex_code("#00ff00")))
+""".strip()
+    embed = hikari.Embed(
+        title = f"Team {team_data.team_number} {team_data.name}",
+        description = description,
+        color = hikari.Color.from_hex_code("#00ff00")
+    )
+    icon = team_data.icon_url
+    if icon is not None: embed.set_thumbnail(icon)
+    await ctx.respond(embed)
 
 # get github
 @bot.command()
