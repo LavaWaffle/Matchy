@@ -64,6 +64,7 @@ class Team:
         if district == "ont": return "Ontario District"
         if district == "pnw": return "Pacific Northwest District"
         if district == "pch": return "Peachtree District"
+        return "no district"
 
     @property
     def rookie_year(self) -> int:
