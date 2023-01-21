@@ -1,6 +1,7 @@
 from dotenv import dotenv_values
 from subsystems.Team import Team
 from utils import *
+from keep_alive import keep_alive
 import lightbulb
 import hikari
 import functools
@@ -13,10 +14,11 @@ import scipy as sp
 import time
 
 OUR_TEAM = 293
+IMAGE_DIR = "images"
 
-if os.path.exists("images"):
-    for file in os.listdir("images"):
-        os.remove(os.path.join("images", file))
+if os.path.exists(IMAGE_DIR):
+    for file in os.listdir(IMAGE_DIR):
+        os.remove(os.path.join(IMAGE_DIR, file))
 
 
 async def error(ctx, text):
@@ -27,12 +29,19 @@ sb = statbotics.Statbotics()
 
 # discord bot stuff goes here
 
-env_vars = dotenv_values('.env')
+if IS_REPLIT:
+    bot = lightbulb.BotApp(
+        os.getenv("DISCORD-BOT-TOKEN"),
+        prefix = "."
+    )
+    keep_alive()
+else:
+    env_vars = dotenv_values('.env')
 
-bot = lightbulb.BotApp(
-    token=env_vars['DISCORD-BOT-TOKEN'],
-    prefix="."
-)
+    bot = lightbulb.BotApp(
+        token=env_vars['DISCORD-BOT-TOKEN'],
+        prefix="."
+    )
 
 
 @bot.command()
@@ -139,11 +148,12 @@ Winner prediction: {'Alliance 1' if geo1 > geo2 else ('Alliance 2' if geo2 > geo
 
 @bot.command()
 @lightbulb.option("year", "The year to plot", int)
-@lightbulb.command("yearepa", "Plots the year's EPA data based on percentiles")
+@lightbulb.command("yearepa", "Plots the year's EPA data based on percentiles",
+                   auto_defer = True)
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def yearepa(ctx: lightbulb.Context) -> None:
-    if not os.path.exists("images"):
-        os.mkdir("images")
+    if not os.path.exists(IMAGE_DIR):
+        os.mkdir(IMAGE_DIR)
     try: data = sb.get_year(ctx.options.year)
     except UserWarning:
         await error(ctx, f"The EPA data for {ctx.options.year} does not exist.")
@@ -156,7 +166,6 @@ async def yearepa(ctx: lightbulb.Context) -> None:
     COLORS = ["#000000", "#ff0000", "#0000ff"]
     NAMES = ["Overall", "Auto", "Teleop"]
     func = lambda x, a, b, c: a * x ** b + c
-    message = await ctx.respond("Crunching data; please wait...")
     for prefix, color, name in zip(PREFIXES, COLORS, NAMES):
         epa = np.array([data[prefix + x] for x in KEYS])
         if None in epa:
@@ -179,14 +188,17 @@ async def yearepa(ctx: lightbulb.Context) -> None:
     plt.xlabel("Percentile")
     plt.ylabel("EPA")
     plt.title(f"Year {ctx.options.year}'s EPA")
-    await send_plot(message, f"EPA data for {ctx.options.year}")
+    await send_plot(ctx, f"EPA data for {ctx.options.year}")
 
 
 @bot.command()
 @lightbulb.option("team", "The team number to check", int)
-@lightbulb.command("teamepa", "Graphs a team's EPA over the years")
+@lightbulb.command("teamepa", "Graphs a team's EPA over the years",
+                   auto_defer = True)
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
 async def teamepa(ctx: lightbulb.Context):
+    if not os.path.exists(IMAGE_DIR):
+        os.mkdir(IMAGE_DIR)
     team = Team(ctx.options.team)
     if team.data is None:
         await error(ctx, f"There is no team numbered {team.team_number}!")
@@ -201,7 +213,6 @@ async def teamepa(ctx: lightbulb.Context):
                 epas.append(epa)
         except UserWarning:
             pass
-    message = await ctx.respond("Crunching data; please wait...")
     plt.plot(years, epas, "o-", color = "#000000")
     xlim = plt.gca().get_xlim()
     line, = plt.plot([0, 2 * years[-1]], [1500, 1500], "-", color = "#00ff00")
@@ -214,7 +225,7 @@ async def teamepa(ctx: lightbulb.Context):
     ax = plt.gca()
     plt.draw()
     ax.set_xticklabels(ax.get_xticks(), rotation = 90)
-    await send_plot(message, "EPA data for team {ctx.options.team}")
+    await send_plot(ctx, f"EPA data for team {ctx.options.team}")
 
 
 # get github

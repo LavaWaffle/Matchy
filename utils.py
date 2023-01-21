@@ -6,6 +6,9 @@ import random
 import string
 
 
+IS_REPLIT = os.getenv("IS-REPLIT")
+
+
 def random_filename():
     while True:
         output = "".join(random.choice(string.ascii_letters) for i in range(10))
@@ -13,7 +16,7 @@ def random_filename():
             return output
 
 
-async def send_plot(message_to_edit: lightbulb.ResponseProxy, title: str) -> None:
+async def send_plot(ctx: lightbulb.Context, title: str) -> None:
     path = os.path.join("images", random_filename() + ".png")
     plt.savefig(path)
     plt.clf()
@@ -22,5 +25,5 @@ async def send_plot(message_to_edit: lightbulb.ResponseProxy, title: str) -> Non
         color="#00ff00"
     )
     embed.set_image(hikari.File(path))
-    await message_to_edit.edit("Done!", embed=embed)
+    await ctx.respond(embed)
     os.remove(path)

@@ -13,3 +13,10 @@
 
 # python bytecode
 **/__pycache__/
+
+# repl.it
+.breakpoints
+.replit
+poetry.lock
+pyproject.toml
+replit.nix
