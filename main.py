@@ -249,4 +249,7 @@ async def everyone(ctx: lightbulb.Context):
         await ctx.respond(f"{ctx.author.mention}, you are not authorized to use this command")
 
 
-bot.run()
+try: bot.run()
+except KeyError:
+    if IS_REPLIT: os.system("kill 9")
+    else: print("Please restart me")
