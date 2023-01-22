@@ -2,6 +2,7 @@ from dotenv import dotenv_values
 from subsystems.Team import Team
 from utils import *
 from keep_alive import keep_alive
+from bs4 import BeautifulSoup
 import lightbulb
 import hikari
 import functools
@@ -12,9 +13,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 import time
+import requests
 
 OUR_TEAM = 293
 IMAGE_DIR = "images"
+EVENT_KEYS = ["njski", "njrob"]
 
 if os.path.exists(IMAGE_DIR):
     for file in os.listdir(IMAGE_DIR):
@@ -225,6 +228,42 @@ async def teamepa(ctx: lightbulb.Context):
     ax = plt.gca()
     ax.set_xticklabels(ax.get_xticks(), rotation = 90)
     await send_plot(ctx, f"EPA data for team {ctx.options.team}")
+
+
+@bot.command()
+@lightbulb.option("rank", "Whether or not to rank by current EPA", bool, required = False, default = False)
+@lightbulb.option("year", "The year to check", int, required = False, default = time.localtime().tm_year)
+@lightbulb.command("ourteams", "Lists teams we compete against in a given year", auto_defer = True)
+@lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
+async def our_teams(ctx: lightbulb.Context):
+    urls = [f"https://www.thebluealliance.com/event/{ctx.options.year}{event_key}"
+            for event_key in EVENT_KEYS]
+    out = []
+    for url in urls:
+        r = requests.get(url)
+        if r.status_code != 200: continue
+        soup = BeautifulSoup(r.content, features = "html.parser")
+        title = soup.find(name = "h1").contents[0]
+        team_names = soup.find_all(name = "div", attrs = {"class": "team-name"})
+        team_names = [tn.find(name = "a").contents[::2] for tn in team_names]
+        hiding = None
+        if ctx.options.rank:
+            teams = [Team(int(t[0])) for t in team_names]
+            teams = sorted([team for team in teams if team.norm_epa], key = lambda t: t.norm_epa, reverse = True)
+            hiding = len(team_names) - len(teams)
+            team_names = [[str(team.team_number), team.name] for team in teams]
+        out.append(f"""
+**Teams in {title}**{'' if hiding is None else f' (hiding {hiding} teams with unknown EPAs)'}:
+{chr(10).join(f'`Team {str(number).rjust(4)}` {team_name}' + (' (us)' if number == str(OUR_TEAM) else '')
+              for number, team_name in team_names)}
+""".strip())
+    embed = hikari.Embed(
+        title = f"Teams faced in {ctx.options.year}"
+                f"{' (ranked from highest to lowest EPA)' if ctx.options.rank else ''}",
+        description = "\n\n".join(out),
+        color = "#00ff00"
+    )
+    await ctx.respond(embed)
 
 
 # get github
