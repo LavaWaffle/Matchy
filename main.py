@@ -223,7 +223,6 @@ async def teamepa(ctx: lightbulb.Context):
     plt.legend()
     plt.xticks(years)
     ax = plt.gca()
-    plt.draw()
     ax.set_xticklabels(ax.get_xticks(), rotation = 90)
     await send_plot(ctx, f"EPA data for team {ctx.options.team}")
 
