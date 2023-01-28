@@ -21,9 +21,6 @@ poetry.lock
 pyproject.toml
 replit.nix
 
-# repl.it
-.breakpoints
-.replit
-poetry.lock
-pyproject.toml
-replit.nix
+# gitpod
+.gitpod.yml
+.venv/*
