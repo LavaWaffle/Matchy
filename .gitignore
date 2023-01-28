@@ -24,3 +24,6 @@ replit.nix
 # gitpod
 .gitpod.yml
 .venv/*
+
+# misc
+cache.json
